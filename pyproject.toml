@@ -1,0 +1,19 @@
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["agent/tests"]
+addopts = "-p no:anchorpy"
+
+[tool.bumpversion]
+current_version = "0.1.0"
+commit = true
+tag = true
+tag_name = "v{new_version}"
+message = "chore: bump version {current_version} → {new_version}"
+
+[[tool.bumpversion.files]]
+filename = "VERSION"
+
+[[tool.bumpversion.files]]
+filename = "dashboard/package.json"
+search = '"version": "{current_version}"'
+replace = '"version": "{new_version}"'

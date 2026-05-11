@@ -1,29 +1,48 @@
-.PHONY: install agent dashboard demo-fall demo-low-hr demo-low-spo2 reset clean
+.PHONY: start install install-dev test demo-fall demo-low-hr demo-low-spo2 reset bump-patch bump-minor bump-major clean
 
+# One-command deploy (Docker)
+start:
+	./start.sh
+
+# Install runtime dependencies locally (without Docker)
 install:
 	cd agent && pip install -r requirements.txt
 	cd dashboard && npm install
 
-agent:
-	uvicorn agent.api:app --reload --port 8000
+# Install dev dependencies (testing + versioning tools)
+install-dev:
+	pip install -r requirements-dev.txt
 
-dashboard:
-	cd dashboard && npm run build && npm start
+# Run test suite
+test:
+	python -m pytest -v
 
-# Comandos de demo — disparan el agente sin MQTT
+# Demo shortcuts (requires agent running on :8000)
 demo-fall:
-	curl -s -X POST "http://localhost:8000/api/simulate?event_type=fall" | python3 -m json.tool
+	./demo.sh fall
 
 demo-low-hr:
-	curl -s -X POST "http://localhost:8000/api/simulate?event_type=low_hr" | python3 -m json.tool
+	./demo.sh low_hr
 
 demo-low-spo2:
-	curl -s -X POST "http://localhost:8000/api/simulate?event_type=low_spo2" | python3 -m json.tool
+	./demo.sh low_spo2
 
 reset:
-	curl -s -X POST "http://localhost:8000/api/wellbeing" | python3 -m json.tool
+	./demo.sh reset
 
+# Version bumping — commits + tags automatically
+bump-patch:
+	bump-my-version bump patch
+
+bump-minor:
+	bump-my-version bump minor
+
+bump-major:
+	bump-my-version bump major
+
+# Remove build artifacts
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type d -name .next -exec rm -rf {} +
 	find . -type d -name node_modules -exec rm -rf {} +
+	find . -type d -name .pytest_cache -exec rm -rf {} +

@@ -18,11 +18,11 @@ function ExternalLinkIcon({ className }: { className?: string }) {
 }
 
 const actionLabels: Record<ActionType, string> = {
-  GracePeriod: 'Ventana de gracia iniciada',
-  NotifiedContact: 'Contacto notificado',
-  Escalated: 'Escalando a emergencias',
-  WellbeingConfirmed: 'Bienestar confirmado',
-  Resolved: 'Evento resuelto',
+  GracePeriod: 'Grace period started',
+  NotifiedContact: 'Contact notified',
+  Escalated: 'Escalating to emergency',
+  WellbeingConfirmed: 'Wellbeing confirmed',
+  Resolved: 'Event resolved',
 }
 
 const actionIcons: Record<ActionType, string> = {
@@ -58,7 +58,7 @@ export function EventTimeline({ actions, isEmergency }: EventTimelineProps) {
   return (
     <section className="space-y-3">
       <h2 className="text-sm lg:text-base font-semibold text-slate-400 uppercase tracking-wider">
-        {isEmergency ? 'Acciones del sistema' : 'Actividad'}
+        {isEmergency ? 'System actions' : 'Activity'}
       </h2>
       
       <div className={`rounded-2xl overflow-hidden border ${

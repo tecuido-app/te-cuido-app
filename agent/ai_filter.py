@@ -7,19 +7,18 @@ from google.genai import types
 from agent.models import Vitals, AnomalyEvent
 
 
-# Modelo confirmado funcionando con tu API key (gemini-2.0-flash dio 429 cuota 0).
 GEMINI_MODEL = "gemini-2.5-flash"
 
 
 class AIFilter:
-    """Pasa el evento candidato + las últimas lecturas a Gemini.
-    Devuelve {real, confianza, razonamiento}.
-    Si no hay API key, queda deshabilitado y siempre dice real=true."""
+    """Passes the candidate event + recent readings to Gemini.
+    Returns {real, confidence, reasoning}.
+    If no API key is configured, it is disabled and always returns real=true."""
 
     def __init__(self):
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
         if not api_key:
-            print("[AIFilter] GEMINI_API_KEY o GOOGLE_API_KEY no configurada — filtro deshabilitado")
+            print("[AIFilter] GEMINI_API_KEY or GOOGLE_API_KEY not set — filter disabled")
             self.client = None
         else:
             self.client = genai.Client(api_key=api_key)
@@ -28,8 +27,8 @@ class AIFilter:
         if self.client is None:
             return {
                 "real": True,
-                "confianza": 1.0,
-                "razonamiento": "AI filter deshabilitado (sin API key)",
+                "confidence": 1.0,
+                "reasoning": "AI filter disabled (no API key)",
             }
 
         readings = "\n".join(
@@ -39,22 +38,22 @@ class AIFilter:
             for v in recent_vitals[-15:]
         )
 
-        prompt = f"""Sos un asistente médico evaluando una alerta de un sistema de monitoreo de adultos mayores.
+        prompt = f"""You are a medical assistant evaluating an alert from an elderly monitoring system.
 
-PACIENTE: Carmen García, 78 años, vive sola.
+PATIENT: Carmen Garcia, 78 years old, lives alone.
 
-EVENTO DETECTADO:
-- Tipo: {event.type.value}
-- Valor: {event.value:.1f}
-- Severidad: {event.severity}/3
+DETECTED EVENT:
+- Type: {event.type.value}
+- Value: {event.value:.1f}
+- Severity: {event.severity}/3
 
-ÚLTIMAS LECTURAS (más reciente abajo):
+RECENT READINGS (most recent last):
 {readings}
 
-¿Es una emergencia real o probablemente un falso positivo (movimiento brusco, sensor mal puesto, sentarse rápido)?
+Is this a real emergency or likely a false positive (sudden movement, sensor misplacement, sitting down quickly)?
 
-Respondé SOLO un objeto JSON con este formato exacto, sin texto adicional:
-{{"real": true|false, "confianza": 0.0-1.0, "razonamiento": "una oración corta en español"}}"""
+Respond with ONLY a JSON object in this exact format, no additional text:
+{{"real": true|false, "confidence": 0.0-1.0, "reasoning": "one short sentence"}}"""
 
         try:
             response = await self.client.aio.models.generate_content(
@@ -66,9 +65,9 @@ Respondé SOLO un objeto JSON con este formato exacto, sin texto adicional:
             )
             return json.loads(response.text)
         except Exception as e:
-            print(f"[AIFilter] error evaluando, fallback a real=true: {e}")
+            print(f"[AIFilter] evaluation error, falling back to real=true: {e}")
             return {
                 "real": True,
-                "confianza": 0.5,
-                "razonamiento": f"Fallback (error en IA: {type(e).__name__})",
+                "confidence": 0.5,
+                "reasoning": f"Fallback (AI error: {type(e).__name__})",
             }

@@ -4,8 +4,8 @@ from agent.models import AnomalyEvent, ActionType
 
 
 class MockSolanaWriter:
-    """Simula escribir on-chain. Devuelve PDAs y tx hashes fake.
-    Reemplazar por SolanaWriter real (anchorpy) cuando el contract esté en Playground."""
+    """Simulates on-chain writes. Returns fake PDAs and tx hashes.
+    Replace with real SolanaWriter (anchorpy) once the contract is deployed on Playground."""
 
     async def register_event(self, event: AnomalyEvent) -> tuple[str, str]:
         pda = f"mockPDA{uuid.uuid4().hex[:32]}"

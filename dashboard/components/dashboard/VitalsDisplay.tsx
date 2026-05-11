@@ -38,13 +38,13 @@ function formatTimeAgo(isoString: string): string {
   const diffMs = now.getTime() - then.getTime()
   const diffMins = Math.floor(diffMs / 60000)
 
-  if (diffMins < 1) return 'Ahora'
-  if (diffMins === 1) return 'Hace 1 min'
-  if (diffMins < 60) return `Hace ${diffMins} min`
+  if (diffMins < 1) return 'Now'
+  if (diffMins === 1) return '1 min ago'
+  if (diffMins < 60) return `${diffMins} min ago`
 
   const diffHours = Math.floor(diffMins / 60)
-  if (diffHours === 1) return 'Hace 1h'
-  return `Hace ${diffHours}h`
+  if (diffHours === 1) return '1h ago'
+  return `${diffHours}h ago`
 }
 
 function isVitalCritical(type: 'heartRate' | 'spo2' | 'skinTemp', value: number): boolean {
@@ -59,9 +59,9 @@ export function VitalsDisplay({ vitals, status }: VitalsDisplayProps) {
     {
       key: 'heartRate' as const,
       icon: HeartIcon,
-      label: 'FC',
+      label: 'HR',
       value: vitals.heartRate,
-      unit: 'lpm',
+      unit: 'bpm',
     },
     {
       key: 'spo2' as const,
@@ -83,7 +83,7 @@ export function VitalsDisplay({ vitals, status }: VitalsDisplayProps) {
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm lg:text-base font-semibold text-slate-400 uppercase tracking-wider">
-          Signos vitales
+          Vital signs
         </h2>
         <span className="text-xs lg:text-sm text-slate-600">
           {formatTimeAgo(vitals.timestamp)}

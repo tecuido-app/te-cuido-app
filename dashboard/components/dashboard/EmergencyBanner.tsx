@@ -7,9 +7,9 @@ type EmergencyBannerProps = {
 }
 
 const eventTypeLabels: Record<EventType, string> = {
-  Fall: 'Posible caida detectada',
-  LowHR: 'Frecuencia cardiaca baja',
-  LowSpO2: 'Oxigeno en sangre bajo',
+  Fall: 'Possible fall detected',
+  LowHR: 'Low heart rate',
+  LowSpO2: 'Low blood oxygen',
 }
 
 function PhoneIcon({ className }: { className?: string }) {
@@ -37,7 +37,7 @@ export function EmergencyBanner({ eventType }: EmergencyBannerProps) {
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 mb-4">
           <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
           <span className="text-rose-300 text-xs lg:text-sm font-semibold uppercase tracking-wider">
-            Emergencia activa
+            Active emergency
           </span>
         </div>
         
@@ -45,7 +45,7 @@ export function EmergencyBanner({ eventType }: EmergencyBannerProps) {
           {eventTypeLabels[eventType]}
         </h2>
         <p className="text-rose-200/80 text-base lg:text-xl">
-          Contactando a la red de apoyo
+          Contacting support network
         </p>
       </div>
     </section>

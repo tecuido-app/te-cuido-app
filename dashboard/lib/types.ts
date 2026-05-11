@@ -19,9 +19,9 @@ export type ActionType =
 
 export type AgentAction = {
   type: ActionType
-  contactIndex?: number      // 0, 1, 2 — qué contacto fue notificado
+  contactIndex?: number      // 0, 1, 2 — which contact was notified
   timestamp: string
-  txHash: string             // hash de la tx en Solana, para link a Explorer
+  txHash: string             // Solana tx hash for Explorer link
   note?: string
 }
 
@@ -29,7 +29,7 @@ export type EventLog = {
   id: string
   type: EventType
   severity: 1 | 2 | 3
-  value: number              // ej: 38 BPM, 87 SpO2, 600 segundos sin movimiento
+  value: number              // e.g.: 38 BPM, 87 SpO2, 600 seconds immobile
   timestamp: string
   actions: AgentAction[]
   resolved: boolean
@@ -43,5 +43,5 @@ export type DashboardData = {
   vitals: Vitals
   activeEvent: EventLog | null
   history: EventLog[]
-  graceSecondsRemaining?: number   // solo si status === 'alert'
+  graceSecondsRemaining?: number   // only when status === 'alert'
 }

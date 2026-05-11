@@ -13,13 +13,13 @@ def _now() -> str:
 
 
 class EscalationAgent:
-    """Orquesta los 4 pasos de la escalada:
-       0. Evalúa con AI filter (descarta falso positivo)
-       1. Ventana de gracia (60s)
-       2. Notifica contacto 0
-       3. Notifica contacto 1
-       4. Escala a emergencia
-    Cada paso queda registrado on-chain via solana_writer."""
+    """Orchestrates the 4 escalation steps:
+       0. AI filter evaluation (dismiss false positive)
+       1. Grace period (60s)
+       2. Notify contact 0
+       3. Notify contact 1
+       4. Escalate to emergency
+    Every step is logged on-chain via solana_writer."""
 
     def __init__(
         self,
@@ -36,7 +36,7 @@ class EscalationAgent:
 
     async def handle(self, event: AnomalyEvent):
         if self._handling:
-            return  # ya hay una escalada activa
+            return  # escalation already in progress
         self._handling = True
         try:
             await self._handle_inner(event)
@@ -46,13 +46,13 @@ class EscalationAgent:
             self._handling = False
 
     async def _handle_inner(self, event: AnomalyEvent):
-        # Paso -1: AI filter
+        # Step -1: AI filter
         decision = await self.ai.evaluate(event, list(state.recent_vitals))
-        razonamiento = decision.get("razonamiento", "")
-        confianza = decision.get("confianza", 0.0)
-        print(f"[Escalation] AI: real={decision.get('real')} confianza={confianza:.2f} — {razonamiento}")
+        reasoning = decision.get("reasoning", "")
+        confidence = decision.get("confidence", 0.0)
+        print(f"[Escalation] AI: real={decision.get('real')} confidence={confidence:.2f} — {reasoning}")
 
-        # Registrar evento on-chain (siempre, para audit trail)
+        # Register event on-chain (always, for audit trail)
         event_pda, event_tx = await self.solana.register_event(event)
         event_log = EventLog(
             id=event_pda,
@@ -64,17 +64,17 @@ class EscalationAgent:
         )
 
         if not decision.get("real", True):
-            # Caso: AI lo descartó como falso positivo
+            # AI dismissed as false positive
             tx = await self.solana.register_action(
                 event_pda,
                 ActionType.AI_DISMISSED,
-                note=razonamiento,
+                note=reasoning,
             )
             event_log.actions.append(AgentAction(
                 type=ActionType.AI_DISMISSED,
                 timestamp=_now(),
                 tx_hash=tx,
-                note=razonamiento,
+                note=reasoning,
             ))
             event_log.resolved = True
             event_log.resolved_at = _now()
@@ -82,12 +82,12 @@ class EscalationAgent:
             state.status = "ok"
             return
 
-        # AI confirmó que es real → arranca escalada
+        # AI confirmed real event — start escalation
         state.active_event = event_log
         state.status = "alert"
         state.wellbeing_confirmed = False
 
-        # Paso 0: ventana de gracia
+        # Step 0: grace period
         tx = await self.solana.register_action(event_pda, ActionType.GRACE_PERIOD)
         event_log.actions.append(AgentAction(
             type=ActionType.GRACE_PERIOD,
@@ -96,23 +96,23 @@ class EscalationAgent:
         ))
 
         if await self._wait_wellbeing(self.policy.grace_period_secs):
-            await self._resolve(event_pda, event_log, "Carmen confirmó que está bien")
+            await self._resolve(event_pda, event_log, "Patient confirmed wellbeing")
             return
 
-        # Paso 1: notificar contacto 0
+        # Step 1: notify contact 0
         state.status = "emergency"
         await self._notify(event, event_pda, event_log, contact_idx=0)
         if await self._wait_wellbeing(self.policy.contact_timeout_secs):
-            await self._resolve(event_pda, event_log, "Familiar respondió")
+            await self._resolve(event_pda, event_log, "Contact 1 responded")
             return
 
-        # Paso 2: notificar contacto 1
+        # Step 2: notify contact 1
         await self._notify(event, event_pda, event_log, contact_idx=1)
         if await self._wait_wellbeing(self.policy.contact_timeout_secs):
-            await self._resolve(event_pda, event_log, "Segundo contacto respondió")
+            await self._resolve(event_pda, event_log, "Contact 2 responded")
             return
 
-        # Paso 3: escalar a emergencia
+        # Step 3: escalate to emergency
         await self.notifier.emergency(event)
         tx = await self.solana.register_action(event_pda, ActionType.ESCALATED)
         event_log.actions.append(AgentAction(
@@ -120,7 +120,7 @@ class EscalationAgent:
             timestamp=_now(),
             tx_hash=tx,
         ))
-        # En este punto el evento queda como activo hasta que alguien manualmente lo resuelva.
+        # Event stays active until manually resolved.
 
     async def _wait_wellbeing(self, timeout: int) -> bool:
         elapsed = 0

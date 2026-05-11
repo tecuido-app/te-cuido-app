@@ -6,13 +6,13 @@ from agent.policy import EscalationPolicy
 
 
 class Detector:
-    """Aplica los 3 thresholds del MVP a cada lectura.
-    Mantiene un buffer chico para detectar caída (spike + inmovilidad sostenida)."""
+    """Applies the 3 MVP thresholds to each reading.
+    Maintains a small buffer to detect falls (spike + sustained immobility)."""
 
     def __init__(self, policy: EscalationPolicy):
         self.policy = policy
         self.recent_spikes: deque = deque(maxlen=10)  # (timestamp, peak_accel)
-        self.last_alert_at = 0.0  # throttle: no más de 1 alerta cada 60s
+        self.last_alert_at = 0.0  # throttle: max 1 alert every 60s
 
     def evaluate(self, v: Vitals) -> AnomalyEvent | None:
         now = time.time()
@@ -24,20 +24,20 @@ class Detector:
         if accel_mag > 3.0:
             self.recent_spikes.append((now, accel_mag))
 
-        # Caída: hubo un spike en los últimos 30s y ahora está inmóvil
+        # Fall: there was a spike in the last 30s and the patient is now immobile
         recent = [(t, mag) for t, mag in self.recent_spikes if (now - t) < 30]
         if recent and not v.is_moving:
             self.last_alert_at = now
-            spike_time = recent[0][0]   # primer spike registrado
+            spike_time = recent[0][0]   # first recorded spike
             seconds_since_spike = now - spike_time
             return AnomalyEvent(
                 type=EventType.FALL,
                 severity=3,
-                value=seconds_since_spike,   # segundos sin movimiento desde el impacto
+                value=seconds_since_spike,   # seconds immobile since impact
                 timestamp=v.timestamp,
             )
 
-        # Bradicardia
+        # Bradycardia
         if v.heart_rate < self.policy.fc_threshold:
             self.last_alert_at = now
             return AnomalyEvent(
@@ -47,7 +47,7 @@ class Detector:
                 timestamp=v.timestamp,
             )
 
-        # Hipoxia
+        # Hypoxia
         if v.spo2 < self.policy.spo2_threshold:
             self.last_alert_at = now
             return AnomalyEvent(

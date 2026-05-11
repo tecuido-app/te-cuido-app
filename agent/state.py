@@ -18,5 +18,5 @@ class AppState:
     wellbeing_confirmed: bool = False
 
 
-# singleton compartido entre subscriber, escalation y api
+# shared singleton across subscriber, escalation, and api
 state = AppState()

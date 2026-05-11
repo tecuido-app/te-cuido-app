@@ -52,14 +52,14 @@ function OkStatusMessage() {
         <div className="flex items-center justify-center gap-2 mb-3">
           <WifiIcon className="w-4 h-4 lg:w-5 lg:h-5 text-cyan-400 animate-pulse" />
           <span className="text-xs lg:text-sm font-medium text-cyan-400 uppercase tracking-widest">
-            En línea
+            Online
           </span>
         </div>
         <h2 className="text-white font-bold text-2xl lg:text-4xl mb-3 tracking-tight">
-          Sistema activo
+          System active
         </h2>
         <p className="text-slate-400 text-base lg:text-xl max-w-md mx-auto leading-relaxed">
-          Monitoreando signos vitales. Te avisamos si detectamos algo.
+          Monitoring vital signs. We'll alert you if we detect anything.
         </p>
       </div>
     </section>
@@ -67,7 +67,7 @@ function OkStatusMessage() {
 }
 
 export function Dashboard() {
-  // ── Conexión al agente ──────────────────────────────────────────────
+  // ── Agent connection ──────────────────────────────────────────────
   const [agentData, setAgentData] = useState<DashboardData | null>(null)
   const [agentOnline, setAgentOnline] = useState(false)
 
@@ -88,7 +88,7 @@ export function Dashboard() {
     return () => { cancelled = true; clearInterval(id) }
   }, [])
 
-  // ── Estado (agente real o mock local) ──────────────────────────────
+  // ── State (real agent or local mock) ──────────────────────────────
   const [mockStatus, setMockStatus] = useState<Status>('ok')
   const status: Status = agentOnline ? (agentData?.status ?? 'ok') : mockStatus
 
@@ -101,7 +101,7 @@ export function Dashboard() {
     : dataByStatus[mockStatus].history
 
   const patientName = agentOnline
-    ? (agentData?.patientName ?? 'Carmen García')
+    ? (agentData?.patientName ?? 'Carmen Garcia')
     : dataByStatus[mockStatus].patientName
 
   const patientAge = agentOnline
@@ -119,7 +119,7 @@ export function Dashboard() {
         if (!res.ok) return
         const v: Vitals = await res.json()
         if (!cancelled) setVitals(v)
-      } catch { /* mantener último valor */ }
+      } catch { /* keep last value */ }
     }
     fetchVitals()
     const id = setInterval(fetchVitals, 5000)
@@ -131,7 +131,7 @@ export function Dashboard() {
 
   const handleCountdownComplete = useCallback(() => {
     if (!agentOnline) setMockStatus('emergency')
-    // Si el agente está online, él maneja la transición — el polling la detecta
+    // If the agent is online, it handles the transition — polling detects it
   }, [agentOnline])
 
   const { seconds, reset } = useCountdown(60, status === 'alert', handleCountdownComplete)
@@ -148,7 +148,7 @@ export function Dashboard() {
   const handleWellbeingConfirm = useCallback(async () => {
     if (agentOnline) {
       await fetch(`${AGENT_URL}/api/wellbeing`, { method: 'POST' }).catch(() => {})
-      // El polling detectará el cambio de estado en ~3s
+      // Polling will detect the status change in ~3s
     } else {
       setMockStatus('ok')
     }
@@ -178,14 +178,14 @@ export function Dashboard() {
             alt="Te Cuido"
             className="h-14 lg:h-20 w-auto drop-shadow-2xl"
           />
-          {/* Indicador de conexión al agente */}
+          {/* Agent connection indicator */}
           <div className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border transition-all duration-500 ${
             agentOnline
               ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
               : 'text-slate-500 border-slate-700/50 bg-slate-800/30'
           }`}>
             <span className={`w-1.5 h-1.5 rounded-full ${agentOnline ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`} />
-            {agentOnline ? 'Agente conectado' : 'Demo'}
+            {agentOnline ? 'Agent connected' : 'Demo'}
           </div>
         </header>
 
@@ -231,7 +231,7 @@ export function Dashboard() {
 
         <footer className="pt-4 text-center">
           <p className="text-slate-600 text-xs lg:text-sm">
-            Cada acción registrada en Solana
+            Every action recorded on Solana
           </p>
         </footer>
       </main>

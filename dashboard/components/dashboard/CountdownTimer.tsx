@@ -9,15 +9,15 @@ type CountdownTimerProps = {
 }
 
 const eventTypeLabels: Record<EventType, string> = {
-  Fall: 'Posible caida detectada',
-  LowHR: 'Frecuencia cardiaca baja',
-  LowSpO2: 'Oxigeno en sangre bajo',
+  Fall: 'Possible fall detected',
+  LowHR: 'Low heart rate',
+  LowSpO2: 'Low blood oxygen',
 }
 
 const eventTypeDetails: Record<EventType, (value: number) => string> = {
-  Fall: (value) => `Sin movimiento por ${Math.floor(value / 60)} minutos`,
-  LowHR: (value) => `${value} latidos por minuto`,
-  LowSpO2: (value) => `${value}% de saturacion`,
+  Fall: (value) => `No movement for ${Math.floor(value / 60)} minutes`,
+  LowHR: (value) => `${value} beats per minute`,
+  LowSpO2: (value) => `${value}% oxygen saturation`,
 }
 
 export function CountdownTimer({ seconds, eventType, eventValue }: CountdownTimerProps) {
@@ -119,7 +119,7 @@ export function CountdownTimer({ seconds, eventType, eventValue }: CountdownTime
             <span className={`text-sm lg:text-xl uppercase tracking-[0.2em] font-medium mt-1 lg:mt-2 ${
               isCritical ? 'text-rose-400/70' : isUrgent ? 'text-amber-400/70' : 'text-slate-500'
             }`}>
-              segundos
+              seconds
             </span>
           </div>
         </div>
@@ -128,9 +128,9 @@ export function CountdownTimer({ seconds, eventType, eventValue }: CountdownTime
         <p className={`text-center text-sm lg:text-base ${
           isUrgent ? 'text-amber-400/80' : 'text-slate-500'
         }`}>
-          {isUrgent 
-            ? 'Confirma pronto para evitar notificar contactos' 
-            : 'Si nadie confirma, notificaremos automaticamente'
+          {isUrgent
+            ? 'Confirm soon to avoid notifying contacts'
+            : 'If no one confirms, we will notify automatically'
           }
         </p>
       </div>

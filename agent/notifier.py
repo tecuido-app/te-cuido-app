@@ -4,15 +4,15 @@ from agent.models import AnomalyEvent
 
 
 EVENT_LABELS = {
-    "Fall": "Caída detectada",
-    "LowHR": "Frecuencia cardíaca baja",
-    "LowSpO2": "Oxígeno en sangre bajo",
+    "Fall": "Fall detected",
+    "LowHR": "Low heart rate",
+    "LowSpO2": "Low blood oxygen",
 }
 
 
 class Notifier:
-    """Envía notificaciones por Telegram. Si no hay token, loguea a stdout
-    (útil para desarrollo y como fallback en demo si falla Telegram)."""
+    """Sends Telegram notifications. If no token is set, logs to stdout
+    (useful for development and as a fallback if Telegram fails)."""
 
     def __init__(self):
         self.token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
@@ -20,25 +20,25 @@ class Notifier:
             os.getenv("TELEGRAM_CHAT_ID_CONTACT_1", "").strip(),
             os.getenv("TELEGRAM_CHAT_ID_CONTACT_2", "").strip(),
         ]
-        self.patient_name = os.getenv("PATIENT_NAME", "Carmen García")
+        self.patient_name = os.getenv("PATIENT_NAME", "Carmen Garcia")
 
         if self.token:
             from telegram import Bot
             self.bot = Bot(token=self.token)
-            print(f"[Notifier] Telegram habilitado, contactos: {self.contacts}")
+            print(f"[Notifier] Telegram enabled, contacts: {self.contacts}")
         else:
             self.bot = None
-            print("[Notifier] Sin TELEGRAM_BOT_TOKEN — notificaciones a stdout")
+            print("[Notifier] No TELEGRAM_BOT_TOKEN — notifications to stdout")
 
     def _format_message(self, event: AnomalyEvent) -> str:
         label = EVENT_LABELS.get(event.type.value, event.type.value)
         return (
-            "ALERTA TE CUIDO\n\n"
-            f"{self.patient_name} necesita atencion.\n\n"
-            f"Evento: {label}\n"
-            f"Hora: {event.timestamp}\n"
-            f"Detalle: valor {event.value:.1f}\n\n"
-            "Respondé este mensaje para confirmar que la atendiste."
+            "TE CUIDO ALERT\n\n"
+            f"{self.patient_name} needs attention.\n\n"
+            f"Event: {label}\n"
+            f"Time: {event.timestamp}\n"
+            f"Detail: value {event.value:.1f}\n\n"
+            "Reply to this message to confirm you attended to them."
         )
 
     async def send(self, contact_idx: int, event: AnomalyEvent):
@@ -47,13 +47,13 @@ class Notifier:
         if self.bot and chat_id:
             try:
                 await self.bot.send_message(chat_id=chat_id, text=text)
-                print(f"[Notifier] Telegram enviado a contacto {contact_idx} (chat {chat_id})")
+                print(f"[Notifier] Telegram sent to contact {contact_idx} (chat {chat_id})")
             except Exception as e:
-                print(f"[Notifier] Error enviando Telegram: {e}")
+                print(f"[Notifier] Error sending Telegram: {e}")
                 print(f"[Notifier mock] {text}")
         else:
             print(f"[Notifier mock] would send to contact {contact_idx}:\n{text}\n")
 
     async def emergency(self, event: AnomalyEvent):
-        # En producción: Twilio Voice + servicio privado tipo Vittal
-        print(f"[Notifier] *** ESCALANDO A EMERGENCIA: {event.type.value} ***")
+        # In production: Twilio Voice + private service
+        print(f"[Notifier] *** ESCALATING TO EMERGENCY: {event.type.value} ***")

@@ -1,4 +1,4 @@
-"""FastAPI app — punto de entrada del agente.
+"""FastAPI app — agent entry point.
 
 Run:
     uvicorn agent.api:app --reload --port 8000
@@ -15,8 +15,9 @@ if os.name == "nt":
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
-# cargar .env del directorio padre
+# load .env from parent directory
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 from agent.state import state
@@ -28,18 +29,18 @@ from agent.escalation import EscalationAgent
 from agent.models import AnomalyEvent, EventType, Vitals
 
 
-# === Wiring de dependencias ===
+# === Dependency wiring ===
 USE_MOCK_SOLANA = os.getenv("USE_MOCK_SOLANA", "true").lower() == "true"
 USE_MQTT = os.getenv("USE_MQTT", "false").lower() == "true"
 
 if USE_MOCK_SOLANA:
     from agent.solana_writer_mock import MockSolanaWriter
     solana_writer = MockSolanaWriter()
-    print("[API] usando MockSolanaWriter (USE_MOCK_SOLANA=true)")
+    print("[API] using MockSolanaWriter (USE_MOCK_SOLANA=true)")
 else:
     from agent.solana_writer import SolanaWriter  # noqa: F401
     solana_writer = SolanaWriter()
-    print("[API] usando SolanaWriter real")
+    print("[API] using real SolanaWriter")
 
 notifier = Notifier()
 ai_filter = AIFilter()
@@ -52,16 +53,16 @@ async def lifespan(app: FastAPI):
     if USE_MQTT:
         from agent.subscriber import subscribe_loop
         task = asyncio.create_task(subscribe_loop(detector, escalation))
-        print("[API] MQTT subscriber iniciado")
+        print("[API] MQTT subscriber started")
     else:
         task = None
-        print("[API] MQTT deshabilitado (USE_MQTT=false) — usar POST /api/simulate")
+        print("[API] MQTT disabled (USE_MQTT=false) — use POST /api/simulate")
     try:
         yield
     finally:
         if task:
             task.cancel()
-            print("[API] MQTT subscriber detenido")
+            print("[API] MQTT subscriber stopped")
 
 
 app = FastAPI(title="TE CUIDO Agent", version="0.1.0", lifespan=lifespan)
@@ -74,7 +75,7 @@ app.add_middleware(
 )
 
 
-# === Helpers de serialización ===
+# === Serialization helpers ===
 
 def _serialize_vitals(v):
     if v is None:
@@ -113,7 +114,12 @@ def _serialize_event(e):
     }
 
 
-# === Endpoints ===
+# === API endpoints ===
+
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse(url="/docs")
+
 
 @app.get("/api/health")
 def health():
@@ -137,7 +143,7 @@ def status():
     return {
         "status": state.status,
         "patient": {
-            "name": os.getenv("PATIENT_NAME", "Carmen García"),
+            "name": os.getenv("PATIENT_NAME", "Carmen Garcia"),
             "age": int(os.getenv("PATIENT_AGE", "78")),
         },
         "vitals": _serialize_vitals(state.last_vitals),
@@ -149,15 +155,15 @@ def status():
 
 @app.post("/api/wellbeing")
 def wellbeing():
-    """El familiar (o Carmen desde el dispositivo) confirma que está bien."""
+    """Family member (or patient from the device) confirms wellbeing."""
     state.wellbeing_confirmed = True
     return {"ok": True}
 
 
-# === Demo / Simulación ===
+# === Demo / Simulation ===
 
 def _make_vitals_for(event_type: str) -> tuple[Vitals, AnomalyEvent]:
-    """Genera vitals sintéticas + AnomalyEvent para el tipo de evento pedido."""
+    """Generates synthetic vitals + AnomalyEvent for the requested event type."""
     now_iso = datetime.now(timezone.utc).isoformat()
 
     if event_type == "fall":
@@ -167,7 +173,7 @@ def _make_vitals_for(event_type: str) -> tuple[Vitals, AnomalyEvent]:
             skin_temp=round(random.uniform(36.2, 36.8), 1),
             accel_x=round(random.uniform(-1.5, 1.5), 2),
             accel_y=round(random.uniform(-1.5, 1.5), 2),
-            accel_z=round(random.uniform(3.5, 4.5), 2),  # spike de impacto
+            accel_z=round(random.uniform(3.5, 4.5), 2),  # impact spike
             gyro_x=0.0, gyro_y=0.0, gyro_z=0.0,
             is_moving=False,
             timestamp=now_iso,
@@ -221,26 +227,26 @@ def _make_vitals_for(event_type: str) -> tuple[Vitals, AnomalyEvent]:
 @app.post("/api/simulate")
 async def simulate(event_type: str = "low_hr"):
     """
-    Inyecta un evento simulado sin necesitar MQTT.
+    Injects a simulated event without needing MQTT.
 
     event_type: "low_hr" | "low_spo2" | "fall"
 
-    Ejemplo:
+    Example:
         curl -X POST "http://localhost:8000/api/simulate?event_type=fall"
     """
     event_type = event_type.lower()
     if event_type not in ("low_hr", "low_spo2", "fall"):
-        raise HTTPException(status_code=400, detail="event_type debe ser: low_hr, low_spo2, fall")
+        raise HTTPException(status_code=400, detail="event_type must be: low_hr, low_spo2, fall")
 
     if escalation._handling:
-        raise HTTPException(status_code=409, detail="Ya hay un evento activo — esperá que se resuelva o confirmá bienestar")
+        raise HTTPException(status_code=409, detail="An event is already active — wait for it to resolve or confirm wellbeing")
 
-    # Poblar recent_vitals con 10 lecturas sintéticas para que Gemini tenga contexto
+    # Populate recent_vitals with 10 synthetic readings to give Gemini context
     for _ in range(10):
         vitals, _ = _make_vitals_for(event_type)
         state.recent_vitals.append(vitals)
 
-    # Lectura final = el evento que dispara la escalada
+    # Final reading — the event that triggers escalation
     vitals, anomaly = _make_vitals_for(event_type)
     state.last_vitals = vitals
     state.recent_vitals.append(vitals)
@@ -251,5 +257,5 @@ async def simulate(event_type: str = "low_hr"):
         "ok": True,
         "event_type": anomaly.type.value,
         "value": anomaly.value,
-        "message": "Escalada iniciada — monitoreá /api/status para ver el progreso",
+        "message": "Escalation started — monitor /api/status to track progress",
     }

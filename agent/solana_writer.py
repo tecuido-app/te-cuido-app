@@ -1,12 +1,12 @@
-"""Real on-chain writer usando anchorpy.
+"""Real on-chain writer using anchorpy.
 
-Requiere:
-  - PROGRAM_ID en .env (del Playground después del deploy)
-  - solana/idl.json descargado del Playground
-  - USE_MOCK_SOLANA=false en .env
+Requires:
+  - PROGRAM_ID in .env (from Playground after deploy)
+  - solana/idl.json downloaded from Playground
+  - USE_MOCK_SOLANA=false in .env
 
-La wallet se genera automáticamente en .solana-wallet.json y se pide airdrop
-en devnet si el balance es bajo.
+The wallet is auto-generated at .solana-wallet.json and an airdrop is requested
+on devnet if the balance is low.
 """
 import asyncio
 import json
@@ -27,7 +27,7 @@ from agent.models import AnomalyEvent, ActionType, EventType
 WALLET_FILE = Path(__file__).parent.parent / ".solana-wallet.json"
 IDL_FILE = Path(__file__).parent.parent / "solana" / "idl.json"
 
-# Mapeos Python → Rust u8 (deben coincidir con los comentarios en lib.rs)
+# Python → Rust u8 mappings (must match codes in lib.rs)
 ACTION_TYPE_U8: dict[ActionType, int] = {
     ActionType.GRACE_PERIOD: 0,
     ActionType.AI_DISMISSED: 1,
@@ -50,7 +50,7 @@ def _load_or_create_keypair() -> Keypair:
         return Keypair.from_bytes(bytes(secret))
     kp = Keypair()
     WALLET_FILE.write_text(json.dumps(list(bytes(kp))))
-    print(f"[Solana] Nueva wallet: {kp.pubkey()} — guardada en {WALLET_FILE.name}")
+    print(f"[Solana] New wallet: {kp.pubkey()} — saved to {WALLET_FILE.name}")
     return kp
 
 
@@ -60,9 +60,9 @@ class SolanaWriter:
         self._rpc_url = os.getenv("SOLANA_RPC_URL", "https://api.devnet.solana.com")
 
         if not self._program_id_str:
-            raise ValueError("[Solana] PROGRAM_ID no está en .env — completalo después del Playground deploy")
+            raise ValueError("[Solana] PROGRAM_ID not set in .env — add it after Playground deploy")
         if not IDL_FILE.exists():
-            raise FileNotFoundError(f"[Solana] IDL no encontrado en {IDL_FILE} — descargalo del Playground")
+            raise FileNotFoundError(f"[Solana] IDL not found at {IDL_FILE} — download it from Playground")
 
         self._program_id = Pubkey.from_string(self._program_id_str)
         self._keypair = _load_or_create_keypair()
@@ -86,11 +86,11 @@ class SolanaWriter:
         try:
             resp = await client.get_balance(self._keypair.pubkey())
             if resp.value < 100_000_000:  # < 0.1 SOL
-                print("[Solana] balance bajo, pidiendo airdrop en devnet...")
+                print("[Solana] low balance, requesting airdrop on devnet...")
                 await client.request_airdrop(self._keypair.pubkey(), 1_000_000_000)
                 await asyncio.sleep(3)
         except Exception as e:
-            print(f"[Solana] airdrop check falló (ignorando): {e}")
+            print(f"[Solana] airdrop check failed (ignoring): {e}")
 
         self._program = Program(self._idl, self._program_id, provider)
         return self._program
@@ -105,14 +105,14 @@ class SolanaWriter:
     async def register_event(self, event: AnomalyEvent) -> tuple[str, str]:
         program = await self._get_program()
 
-        event_id = int(time.time() * 1000)  # ms timestamp → event_id único
+        event_id = int(time.time() * 1000)  # ms timestamp → unique event_id
         event_pda = self._derive_pda(event_id)
 
         tx = await program.rpc["register_event"](
             event_id,
             EVENT_TYPE_U8.get(event.type, 0),
             event.severity,
-            int(event.value * 100),  # i64 fixed-point, 2 decimales
+            int(event.value * 100),  # i64 fixed-point, 2 decimal places
             ctx=Context(
                 accounts={
                     "event_log": event_pda,

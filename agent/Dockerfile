@@ -2,11 +2,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY agent/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy agent source into agent/ so "from agent.X import Y" resolves correctly
-COPY . ./agent/
+COPY agent/ ./agent/
 
 EXPOSE 8000
 

@@ -9,7 +9,7 @@ const inter = {
 
 export const metadata: Metadata = {
   title: 'Te Cuido | Dashboard',
-  description: 'Sistema preventivo inteligente para cuidar a quienes más importan.',
+  description: 'Intelligent preventive monitoring system for those who matter most.',
   icons: {
     icon: [
       {
@@ -43,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className="bg-slate-950">
+    <html lang="en" className="bg-slate-950">
       <body className={`${inter.className} antialiased`}>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}

@@ -6,6 +6,9 @@ Detects falls, bradycardia, and hypoxia. Automatically escalates alerts to trust
 
 > Hackathon DEV3PACK · May 2026
 
+Deployed at: https://te-cuido-app-production.up.railway.app/
+Api access: https://synora-ftzn.onrender.com/docs#/
+
 ---
 
 ## Quick start

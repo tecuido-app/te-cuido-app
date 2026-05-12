@@ -41,7 +41,7 @@ export function ConfirmButton({ patientName, onConfirm }: ConfirmButtonProps) {
           <CheckIcon className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
         </div>
         <span className="text-white font-bold text-lg lg:text-2xl tracking-tight">
-          {firstName} is fine
+          {firstName} esta bien
         </span>
       </div>
     </button>

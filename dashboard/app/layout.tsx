@@ -9,7 +9,7 @@ const inter = {
 
 export const metadata: Metadata = {
   title: 'Te Cuido | Dashboard',
-  description: 'Intelligent preventive monitoring system for those who matter most.',
+  description: 'Sistema preventivo inteligente para cuidar a quienes más importan.',
   icons: {
     icon: [
       {

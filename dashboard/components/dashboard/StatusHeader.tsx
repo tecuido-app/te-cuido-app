@@ -10,7 +10,7 @@ type StatusHeaderProps = {
 
 const statusConfig = {
   ok: {
-    label: 'All good',
+    label: 'Todo bien',
     bgColor: 'bg-cyan-500/15',
     textColor: 'text-cyan-400',
     dotColor: 'bg-cyan-400',
@@ -18,7 +18,7 @@ const statusConfig = {
     glowColor: 'shadow-cyan-500/20',
   },
   alert: {
-    label: 'Checking',
+    label: 'Verificando',
     bgColor: 'bg-amber-500/15',
     textColor: 'text-amber-400',
     dotColor: 'bg-amber-400',
@@ -26,7 +26,7 @@ const statusConfig = {
     glowColor: 'shadow-amber-500/20',
   },
   emergency: {
-    label: 'Emergency',
+    label: 'Emergencia',
     bgColor: 'bg-rose-500/15',
     textColor: 'text-rose-400',
     dotColor: 'bg-rose-400',
@@ -45,7 +45,7 @@ export function StatusHeader({ patientName, patientAge, status }: StatusHeaderPr
           {patientName}
         </h1>
         <p className="text-slate-500 text-sm lg:text-lg mt-1">
-          {patientAge} years old
+          {patientAge} anos
         </p>
       </div>
       <div

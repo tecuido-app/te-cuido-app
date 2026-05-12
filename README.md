@@ -8,45 +8,13 @@ Detects falls, bradycardia, and hypoxia. Automatically escalates alerts to trust
 
 ---
 
-## Deploy online
-
-Agent on **Railway**, dashboard on **Vercel**. Both deploy directly from this repo.
-
-### 1 — Agent → Railway
-
-1. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub repo
-2. Select this repo, set **Root Directory** to `agent`
-3. Railway auto-detects the Dockerfile and builds it
-4. In **Variables**, add all keys from `.env.example` (except `NEXT_PUBLIC_*`)
-5. Once deployed, copy the public URL Railway assigns (e.g. `https://te-cuido-agent.up.railway.app`)
-
-### 2 — Dashboard → Vercel
-
-1. Go to [vercel.com](https://vercel.com) → New Project → Import from GitHub
-2. Set **Root Directory** to `dashboard`
-3. In **Environment Variables**, add:
-   - `NEXT_PUBLIC_AGENT_URL` = the Railway URL from step 1 (e.g. `https://te-cuido-agent.up.railway.app`)
-4. Deploy — Vercel assigns a public URL automatically
-
-### 3 — Test it
-
-```bash
-# Hit your live agent
-AGENT_URL=https://te-cuido-agent.up.railway.app ./demo.sh status
-
-# Trigger an event from anywhere
-AGENT_URL=https://te-cuido-agent.up.railway.app ./demo.sh low_hr --watch
-```
-
----
-
-## Local deploy
+## Quick start
 
 ```bash
 ./start.sh
 ```
 
-Creates `.env` on first run, then builds and starts both containers with Docker Compose.
+That's it. The script creates `.env` from `.env.example` on first run and prompts you to fill in your API keys. On subsequent runs it builds and starts everything with Docker Compose.
 
 - Dashboard: http://localhost:3000
 - Agent API: http://localhost:8000
